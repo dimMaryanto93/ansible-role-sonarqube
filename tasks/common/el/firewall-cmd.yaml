@@ -1,0 +1,13 @@
+---
+- name: Set selinux to permissive on RedHat family
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
+    
+- name: Allow port 9000/tcp expose to outside network
+  ansible.posix.firewalld:
+    zone: public
+    port: 9000/tcp
+    permanent: yes
+    immediate: true
+    state: enabled

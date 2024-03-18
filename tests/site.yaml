@@ -1,0 +1,13 @@
+---
+- hosts: ["all"]
+  become: true
+  vars:
+    docker_insecure_registries_enabled: true
+    docker_insecure_registries_conf:
+      - url: "192.168.88.50:8086"
+        auth:
+          docker_login: true      
+          user: test
+          password: test
+  roles:
+    - ../../ansible-role-sonarqube

@@ -1,0 +1,1 @@
+localhost   ansible_host=192.168.88.11  ansible_user=ansible    ansible_port=22

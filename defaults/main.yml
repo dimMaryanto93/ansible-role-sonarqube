@@ -1,0 +1,5 @@
+---
+sonarqube_installation_path: /opt/sonarqube
+sonarqube_data_path: /var/opt/sonarqube
+sonarqube_download_url: https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.4.1.88267.zip
+java_bin_path: /usr/lib/jvm/jdk-17-oracle-x64/bin/java

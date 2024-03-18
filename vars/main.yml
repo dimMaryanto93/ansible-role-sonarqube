@@ -1,0 +1,8 @@
+---
+# vars file for ansible-role-docker
+sysctl:
+  max_map_count: 524288
+  file_max: 131072
+limit_d:
+  nofile: 131072
+  nproc: 8192

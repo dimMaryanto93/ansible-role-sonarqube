@@ -1,0 +1,8 @@
+---
+- name: Allow port 9000/tcp expose to outside network
+  community.general.ufw:
+    zone: public
+    port: 9000/tcp
+    permanent: yes
+    immediate: true
+    state: enabled

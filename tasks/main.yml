@@ -1,0 +1,140 @@
+---
+- name: Configure Harderning OS
+  block: 
+    - ansible.posix.sysctl:
+        name: vm.max_map_count
+        value: '262144'
+        state: present
+        sysctl_file: /etc/sysctl.d/99-sonarqube.conf
+
+    - ansible.posix.sysctl:
+        name: fs.file-max
+        value: '65536'
+        state: present
+        sysctl_file: /etc/sysctl.d/99-sonarqube.conf
+
+    - pam_limits:
+        domain: '*'
+        limit_type: hard
+        limit_item: nofile
+        value: '65536'
+
+    - pam_limits:
+        domain: '*'
+        limit_type: hard
+        limit_item: nproc
+        value: '4096'
+      
+- name: Configure Security-enhanced
+  block: 
+    - name: Add rule for sonarqube for communication to outside on RedHat family
+      include_tasks: common/el/firewall-cmd.yaml
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Add rule for sonarqube for communication to outside on Debian family
+      include_tasks: common/debian/ufw.yaml
+      when: ansible_facts['os_family'] == 'Debian'
+    
+    - name: Ensure group 'sonar' exists
+      ansible.builtin.group:
+        name: sonarqube
+        state: present
+
+    - name: Add the user 'sonar' exists
+      ansible.builtin.user:
+        name: sonarqube
+        comment: user for using sonar application
+        group: sonarqube
+        append: yes
+
+- name: Pre-requirement to install sonarqube
+  block: 
+    - name: Create a directory ==> {{ sonarqube_installation_path }} if it does not exist 
+      ansible.builtin.file:
+        path: "{{ sonarqube_installation_path }}"
+        state: directory
+        mode: '7777'
+        owner: sonarqube
+        group: sonarqube
+
+    - name: Create a directory for data sonarqube 
+      ansible.builtin.file:
+        path: "{{ sonarqube_data_path }}/{{ item }}"
+        state: directory
+        mode: '7777'
+        owner: sonarqube
+        group: sonarqube
+      loop: ['data', 'temp']
+
+    - name: Install dependencies for CentOS
+      include_tasks: common/el/dependencies.yaml
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Install dependencies for CentOS
+      include_tasks: common/debian/dependencies.yaml
+      when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install sonarqube
+  block: 
+    - name: Unarchive sonarqube
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: "{{ sonarqube_download_url }}"
+        dest: "{{ sonarqube_installation_path }}"
+        mode: '0777'
+        owner: sonarqube
+        group: sonarqube
+
+    - name: Give access to user 'nexus' recusively
+      file: 
+        dest: "{{ sonarqube_installation_path }}" 
+        owner: sonarqube
+        group: sonarqube
+        mode: '0777'
+        recurse: yes
+
+    - shell: "ls -d {{ sonarqube_installation_path }}/sonarqube-* | tail -n 1"
+      register: sonarqube_version_dir_name
+
+    - shell: "ls -d {{ sonarqube_version_dir_name.stdout }}/lib/sonar-application-*.jar | tail -n 1"
+      register: sonarqube_version_application_name
+
+    - debug: 
+        msg:
+          - "directory: {{ sonarqube_version_dir_name.stdout }} of {{ sonarqube_version_application_name.stdout }}"
+
+    - name: Create a symbolic link
+      ansible.builtin.file:
+        src: "{{ sonarqube_version_application_name.stdout }}"
+        dest: "{{ sonarqube_installation_path }}/sonar-application.jar"
+        owner: sonarqube 
+        group: sonarqube 
+        state: link
+
+    - name: Create .service file
+      ansible.builtin.template:
+       src: templates/sonarqube.service.j2
+       dest: /etc/systemd/system/sonarqube.service
+
+- name: Post Installation
+  block:
+    - name: Configure Data folder
+      lineinfile:
+        path: "{{ sonarqube_version_dir_name.stdout }}/conf/sonar.properties"
+        regexp: "^sonar.path.data="
+        insertafter: "^#sonar.path.data="
+        line: "sonar.path.data={{ sonarqube_data_path }}/data"
+
+    - name: Configure Temp folder
+      lineinfile:
+        path: "{{ sonarqube_version_dir_name.stdout }}/conf/sonar.properties"
+        regexp: "^sonar.path.temp="
+        insertafter: "^#sonar.path.temp="
+        line: "sonar.path.data={{ sonarqube_data_path }}/temp"
+
+- name: Enable service for sonarqube
+  service:
+    name: sonarqube
+    state: started
+    daemon_reload: yes
+    enabled: yes

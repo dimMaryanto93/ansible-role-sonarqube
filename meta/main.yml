@@ -1,0 +1,27 @@
+galaxy_info:
+  role_name: sonarqube
+  author: dimasm93
+  description: Install sonarqube
+  company: PT. Tabeldata Informatika
+
+  license: license (GPL-2.0-or-later, MIT, etc)
+
+  min_ansible_version: 2.9
+  
+  platforms:
+  - name: Ubuntu
+    versions:
+      - xenial
+      - bionic
+      - focal
+  - name: EL
+    versions:
+      - 7
+      - 8
+
+  galaxy_tags: 
+  - code-quality
+  - sast
+  - sonarqube
+
+dependencies: []
