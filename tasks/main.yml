@@ -76,10 +76,17 @@
 
 - name: Install sonarqube
   block: 
+    - name: Download sonarqube
+      ansible.builtin.get_url:
+        remote_src: yes
+        src: "{{ sonarqube_download_url }}"
+        dest: "/tmp/sonarqube.zip"
+      register: bin_files
+
     - name: Unarchive sonarqube
       ansible.builtin.unarchive:
         remote_src: yes
-        src: "{{ sonarqube_download_url }}"
+        src: "{{ bin_files.stdout }}"
         dest: "{{ sonarqube_installation_path }}"
         mode: '0777'
         owner: sonarqube
