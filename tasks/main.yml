@@ -78,7 +78,6 @@
   block: 
     - name: Download sonarqube
       ansible.builtin.get_url:
-        remote_src: yes
         src: "{{ sonarqube_download_url }}"
         dest: "/tmp/sonarqube.zip"
       register: bin_files
