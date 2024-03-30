@@ -85,7 +85,7 @@
     - name: Unarchive sonarqube
       ansible.builtin.unarchive:
         remote_src: yes
-        src: "{{ bin_files.stdout }}"
+        src: "/tmp/sonarqube.zip"
         dest: "{{ sonarqube_installation_path }}"
         mode: '0777'
         owner: sonarqube
