@@ -66,6 +66,15 @@
         group: sonarqube
       loop: ['data', 'temp']
 
+    - name: Install dependencies for extract package
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - zip
+        - unzip
+        - tar
+
     - name: Install dependencies for CentOS
       include_tasks: common/el/dependencies.yaml
       when: ansible_facts['os_family'] == 'RedHat'
